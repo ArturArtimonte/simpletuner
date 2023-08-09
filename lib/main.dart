@@ -5,6 +5,7 @@ import 'package:fftea/fftea.dart';
 import 'package:flutter_sound/flutter_sound.dart';
 import 'dart:async';
 import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 void main() => runApp(MyApp());
 
@@ -46,6 +47,21 @@ class _TunerScreenState extends State<TunerScreen> {
     _initializeRecorder();
   }
 
+  Future<void> _checkPermissions() async {
+    PermissionStatus status = await Permission.microphone.status;
+
+    if (status.isDenied) {
+      Map<Permission, PermissionStatus> statuses = await [
+        Permission.microphone,
+      ].request();
+      print(statuses[Permission.microphone]);
+    }
+
+    if (await Permission.microphone.isPermanentlyDenied) {
+      openAppSettings();
+    }
+  }
+
   Future<void> _initializeRecorder() async {
     await _recorder!.openRecorder();
     Directory tempDir = await getTemporaryDirectory();
@@ -56,7 +72,7 @@ class _TunerScreenState extends State<TunerScreen> {
   }
 
   void _processAudioData() {
-    if (fft == null) return; // Ensure FFT is initialized
+    if (fft == null) return;
     final freq = fft!.realFft(myData);
     if (freq != null && freq.isNotEmpty) {
       double frequency = _calculateFrequency(freq as List<double>);
@@ -71,6 +87,7 @@ class _TunerScreenState extends State<TunerScreen> {
   }
 
   Future<void> _startRecording() async {
+    await _checkPermissions();
     await _recorder!.startRecorder(
       toFile: _recordingPath,
       codec: Codec.pcm16,
@@ -90,7 +107,7 @@ class _TunerScreenState extends State<TunerScreen> {
 
   Future<void> _processRecording() async {
     myData = await _fetchAudioData();
-    fft = FFT(myData.length); // Initialize FFT here
+    fft = FFT(myData.length);
     _processAudioData();
   }
 

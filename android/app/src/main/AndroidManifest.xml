@@ -1,5 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.simple_tuner">
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
    <application
         android:label="simple_tuner"
         android:name="${applicationName}"
